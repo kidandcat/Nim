@@ -499,7 +499,7 @@ proc testNimblePackages(r: var TResults, cat: Category) =
     return
 
   let packageFileTest = makeSupTest("PackageFileParsed", "", cat)
-  var packagesDir = "pkgstemp"
+  let packagesDir = "pkgstemp"
   var errors = 0
   try:
     for name, url, cmd, hasDep in listPackages():
@@ -512,7 +512,7 @@ proc testNimblePackages(r: var TResults, cat: Category) =
           let nimbleStatus = waitForExitEx(nimbleProcess)
           nimbleProcess.close
           if nimbleStatus != QuitSuccess:
-            r.addResult(test, targetC, "", "", reInstallFailed)
+            r.addResult(test, targetC, "", "nimble install failed", reInstallFailed)
             inc errors
             continue
 
@@ -521,7 +521,7 @@ proc testNimblePackages(r: var TResults, cat: Category) =
         let installStatus = waitForExitEx(installProcess)
         installProcess.close
         if installStatus != QuitSuccess:
-          r.addResult(test, targetC, "", "", reInstallFailed)
+          r.addResult(test, targetC, "", "git clone failed", reInstallFailed)
           inc errors
           continue
 
@@ -531,18 +531,21 @@ proc testNimblePackages(r: var TResults, cat: Category) =
       let buildStatus = waitForExitEx(buildProcess)
       buildProcess.close
       if buildStatus != QuitSuccess:
-        r.addResult(test, targetC, "", "", reBuildFailed)
+        r.addResult(test, targetC, "", "package test failed", reBuildFailed)
         inc errors
       else:
         r.addResult(test, targetC, "", "", reSuccess)
-    let buildStatus = if errors == 0: reSuccess else: reBuildFailed
-    r.addResult(packageFileTest, targetC, "", "", buildStatus)
+    if errors == 0:
+      r.addResult(packageFileTest, targetC, "", "", reSuccess)
+    else:
+      r.addResult(packageFileTest, targetC, "", "Some tests failed", reBuildFailed)
+
   except JsonParsingError:
     echo "[Warning] - Cannot run nimble tests: Invalid package file."
-    r.addResult(packageFileTest, targetC, "", "", reBuildFailed)
+    r.addResult(packageFileTest, targetC, "", "Invalid package file", reBuildFailed)
   except ValueError:
     echo "[Warning] - $#" % getCurrentExceptionMsg()
-    r.addResult(packageFileTest, targetC, "", "", reBuildFailed)
+    r.addResult(packageFileTest, targetC, "", "Unknown package", reBuildFailed)
   finally:
     if errors == 0: removeDir(packagesDir)
 
