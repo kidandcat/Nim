@@ -503,6 +503,7 @@ proc testNimblePackages(r: var TResults, cat: Category) =
   var errors = 0
   try:
     for name, url, cmd, hasDep in listPackages():
+      inc r.total
       var test = makeSupTest(url, "", cat)
       let buildPath = packagesDir / name
       if not existsDir(buildPath):
@@ -513,7 +514,6 @@ proc testNimblePackages(r: var TResults, cat: Category) =
           nimbleProcess.close
           if nimbleStatus != QuitSuccess:
             r.addResult(test, targetC, "", "nimble install failed", reInstallFailed)
-            inc errors
             continue
 
         let installProcess = startProcess("git", "", ["clone", url, buildPath],
@@ -522,7 +522,6 @@ proc testNimblePackages(r: var TResults, cat: Category) =
         installProcess.close
         if installStatus != QuitSuccess:
           r.addResult(test, targetC, "", "git clone failed", reInstallFailed)
-          inc errors
           continue
 
       let cmdArgs = parseCmdLine(cmd)
@@ -530,11 +529,13 @@ proc testNimblePackages(r: var TResults, cat: Category) =
                                       options = {poUsePath, poStdErrToStdOut})
       let buildStatus = waitForExitEx(buildProcess)
       buildProcess.close
+
       if buildStatus != QuitSuccess:
         r.addResult(test, targetC, "", "package test failed", reBuildFailed)
-        inc errors
       else:
+        inc r.passed
         r.addResult(test, targetC, "", "", reSuccess)
+    errors = r.total - r.passed
     if errors == 0:
       r.addResult(packageFileTest, targetC, "", "", reSuccess)
     else:
