@@ -26,7 +26,7 @@ const
     "lib",
     "longgc",
     "manyloc",
-    "nimble-extra",
+    "nimble",
     "niminaction",
     "rodfiles",
     "threads",
@@ -446,7 +446,6 @@ var nimbleDir = getEnv("NIMBLE_DIR").string
 if nimbleDir.len == 0: nimbleDir = getHomeDir() / ".nimble"
 let
   nimbleExe = findExe("nimble")
-  #packageDir = nimbleDir / "pkgs" # not used
   packageIndex = nimbleDir / "packages_official.json"
 
 proc waitForExitEx(p: Process): int =
@@ -513,7 +512,7 @@ proc testNimblePackages(r: var TResults, cat: Category) =
           let nimbleStatus = waitForExitEx(nimbleProcess)
           nimbleProcess.close
           if nimbleStatus != QuitSuccess:
-            r.addResult(test, targetC, "", "nimble install failed", reInstallFailed)
+            r.addResult(test, targetC, "", "'nimble install' failed", reInstallFailed)
             continue
 
         let installProcess = startProcess("git", "", ["clone", url, buildPath],
@@ -521,7 +520,7 @@ proc testNimblePackages(r: var TResults, cat: Category) =
         let installStatus = waitForExitEx(installProcess)
         installProcess.close
         if installStatus != QuitSuccess:
-          r.addResult(test, targetC, "", "git clone failed", reInstallFailed)
+          r.addResult(test, targetC, "", "'git clone' failed", reInstallFailed)
           continue
 
       let cmdArgs = parseCmdLine(cmd)
@@ -539,7 +538,7 @@ proc testNimblePackages(r: var TResults, cat: Category) =
     if errors == 0:
       r.addResult(packageFileTest, targetC, "", "", reSuccess)
     else:
-      r.addResult(packageFileTest, targetC, "", "Some tests failed", reBuildFailed)
+      r.addResult(packageFileTest, targetC, "", "", reBuildFailed)
 
   except JsonParsingError:
     echo "[Warning] - Cannot run nimble tests: Invalid package file."
@@ -721,7 +720,7 @@ proc processCategory(r: var TResults, cat: Category, options, testsDir: string,
     compileExample(r, "examples/*.nim", options, cat)
     compileExample(r, "examples/gtk/*.nim", options, cat)
     compileExample(r, "examples/talk/*.nim", options, cat)
-  of "nimble-extra":
+  of "nimble":
     testNimblePackages(r, cat)
   of "niminaction":
     testNimInAction(r, cat, options)

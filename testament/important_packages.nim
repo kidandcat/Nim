@@ -12,7 +12,7 @@ pkg "blscurve", "", "", true
 pkg "bncurve", "nim c tests/tarith.nim", "", true
 pkg "c2nim"
 pkg "chronicles", "nim c -o:chr chronicles.nim"
-pkg "chronos", "nim c tests/teststream.nim"
+# pkg "chronos", "nim c tests/teststream.nim"
 pkg "cligen", "nim c -o:cligenn cligen.nim"
 pkg "compactdict", "nim c tests/test1.nim"
 pkg "criterion"
